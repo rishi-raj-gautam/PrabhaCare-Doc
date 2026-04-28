@@ -257,7 +257,7 @@ export default function DoctorNewConsultation() {
   const shareMessage = useMemo(() => {
     const dx = diagnoses.length ? diagnoses.join(', ') : '—'
     const meds = medicines.length ? medicines.map((m) => `${m.name} ${m.dosage}`).join('; ') : '—'
-    return `CareOS e-Prescription\nPatient: ${patient?.name || '-'}\nDiagnoses: ${dx}\nMedicines: ${meds}\nNotes: ${clampText(diagnosisNotes || specialInstructions || '', 160)}`
+    return `PrabhaCare e-Prescription\nPatient: ${patient?.name || '-'}\nDiagnoses: ${dx}\nMedicines: ${meds}\nNotes: ${clampText(diagnosisNotes || specialInstructions || '', 160)}`
   }, [diagnosisNotes, diagnoses, medicines, patient?.name, specialInstructions])
 
   const whatsappLink = (() => {
@@ -810,7 +810,7 @@ export default function DoctorNewConsultation() {
 
                   {generated?.pdfDataUrl ? (
                     <div style={{ marginTop: 10 }}>
-                      <a className="co-btn co-btn--ghost" href={generated.pdfDataUrl} download={`CareOS_${patient?.name}_eRx.pdf`}>
+                      <a className="co-btn co-btn--ghost" href={generated.pdfDataUrl} download={`PrabhaCare_${patient?.name}_eRx.pdf`}>
                         Download PDF
                       </a>
                       {whatsappLink ? (
@@ -820,7 +820,7 @@ export default function DoctorNewConsultation() {
                       ) : null}
                       <a
                         className="co-btn co-btn--ghost"
-                        href={`mailto:?subject=${encodeURIComponent('CareOS e-Prescription')}&body=${encodeURIComponent(shareMessage)}`}
+                        href={`mailto:?subject=${encodeURIComponent('PrabhaCare e-Prescription')}&body=${encodeURIComponent(shareMessage)}`}
                       >
                         Share Email
                       </a>

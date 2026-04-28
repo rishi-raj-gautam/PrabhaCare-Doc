@@ -136,7 +136,7 @@ export default function DoctorRecords() {
                           Medicines: <b>{r.payload?.medicines?.map(m => m.name).join(', ') || '-'}</b>
                         </div>
                         {r.pdfFileUrl ? (
-                          <a className="co-btn co-btn--ghost" href={r.pdfFileUrl} download={`CareOS_${patientName}_eRx.pdf`}>
+                          <a className="co-btn co-btn--ghost" href={r.pdfFileUrl} download={`PrabhaCare_${patientName}_eRx.pdf`}>
                             Download PDF
                           </a>
                         ) : null}

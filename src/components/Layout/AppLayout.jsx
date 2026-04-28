@@ -152,7 +152,7 @@ export default function AppLayout() {
               <Menu size={24} color="var(--text-h)" />
             </button>
             <div className="co-topbarTitle" style={{ fontSize: '20px', letterSpacing: '-0.5px' }}>
-              <span style={{ fontWeight: 800, color: 'var(--text-h)' }}>Care</span> <span style={{ color: 'var(--primary)' }}>OS</span>
+              <span style={{ fontWeight: 800, color: 'var(--text-h)' }}>Prabha</span><span style={{ color: 'var(--primary)' }}>Care</span>
             </div>
             <div className="co-search" style={{ background: 'var(--surface-container-low)', border: 'none', borderRadius: '8px', marginLeft: '12px' }}>
               <Search size={16} color="var(--muted)" />

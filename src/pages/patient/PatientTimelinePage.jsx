@@ -61,7 +61,7 @@ export default function PatientTimelinePage() {
                       Medicines: <b>{r.extracted?.medicines?.join(', ') || '-'}</b>
                     </div>
                     {r.pdfDataUrl ? (
-                      <a className="co-btn co-btn--primary" href={r.pdfDataUrl} download={`CareOS_${patient.name}_Prescription.pdf`}>
+                      <a className="co-btn co-btn--primary" href={r.pdfDataUrl} download={`PrabhaCare_${patient.name}_Prescription.pdf`}>
                         Download PDF
                       </a>
                     ) : (

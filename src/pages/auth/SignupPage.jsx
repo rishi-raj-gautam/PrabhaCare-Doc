@@ -69,7 +69,7 @@ export default function SignupPage() {
   return (
     <div className="co-authWrap">
       <div className="co-authCard">
-        <div className="co-authBrand">CareOS</div>
+        <div className="co-authBrand">PrabhaCare</div>
         <h1 className="co-authTitle">Create Doctor Account</h1>
 
         <form className="co-form" onSubmit={onSubmit}>

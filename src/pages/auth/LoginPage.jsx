@@ -24,10 +24,10 @@ export default function LoginPage() {
   return (
     <div className="co-authWrap">
       <div className="co-authCard">
-        <div className="co-authBrand">CareOS</div>
+        <div className="co-authBrand">PrabhaCare</div>
         <h1 className="co-authTitle">Sign in</h1>
         <p className="co-mutedSmall">
-          Demo accounts: <b>doctor@careos.demo</b> / <b>demo123</b> and <b>patient@careos.demo</b> / <b>demo123</b>
+          Demo accounts: <b>doctor@prabhacare.demo</b> / <b>demo123</b> and <b>patient@prabhacare.demo</b> / <b>demo123</b>
         </p>
 
         <form className="co-form" onSubmit={onSubmit}>
@@ -53,7 +53,7 @@ export default function LoginPage() {
           </button>
 
           <div className="co-authFooter">
-            New to CareOS? <Link to="/auth/signup">Create account</Link>
+            New to PrabhaCare? <Link to="/auth/signup">Create account</Link>
           </div>
         </form>
       </div>

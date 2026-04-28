@@ -29,7 +29,7 @@ export function generatePrescriptionPdf({ patient, doctor, consult }) {
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(20)
-  doc.text('e-Prescription (CareOS)', marginX, y)
+  doc.text('e-Prescription (PrabhaCare)', marginX, y)
 
   y += 28
   doc.setFont('helvetica', 'normal')
