@@ -14,6 +14,15 @@ function formatTimeFromMinutes(mins) {
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
 }
 
+function formatToAmPm(mins) {
+  const hh = Math.floor(mins / 60)
+  const mm = mins % 60
+  const ampm = hh >= 12 ? 'PM' : 'AM'
+  let h12 = hh % 12
+  if (h12 === 0) h12 = 12
+  return `${String(h12).padStart(2, '0')}:${String(mm).padStart(2, '0')} ${ampm}`
+}
+
 function overlaps(aStart, aEnd, slotStart, slotEnd) {
   const s1 = new Date(aStart).getTime()
   const e1 = new Date(aEnd).getTime()
@@ -24,13 +33,13 @@ function overlaps(aStart, aEnd, slotStart, slotEnd) {
 
 export default function DoctorSchedules() {
   const nav = useNavigate()
-  const { sessionUser, currentDoctorId, appointments, patients, addAppointment, updateAppointment } = useApp()
+  const { sessionUser, currentDoctorId, appointments, patients, addAppointment, updateAppointment, updateDoctor } = useApp()
 
   const [view, setView] = useState('week') // day/week/month (month placeholder)
   const [selectedDate, setSelectedDate] = useState(() => new Date())
 
   const prefs = {
-    shiftStart: '08:00',
+    shiftStart: '09:00',
     shiftEnd: '17:00',
     breakStart: '13:00',
     breakEnd: '14:00',
@@ -41,12 +50,6 @@ export default function DoctorSchedules() {
   const [shiftEnd, setShiftEnd] = useState(prefs.shiftEnd)
   const [breakStart, setBreakStart] = useState(prefs.breakStart)
   const [breakEnd, setBreakEnd] = useState(prefs.breakEnd)
-
-  const [bookingModal, setBookingModal] = useState(null) // { slotStartISO, slotEndISO, dateLabel, conflict }
-  const [bookingType, setBookingType] = useState('in_person')
-  const [bookingPriority, setBookingPriority] = useState('FOLLOW_UP')
-  const [bookingEmergencyOverride, setBookingEmergencyOverride] = useState(false)
-  const [bookingPatientId, setBookingPatientId] = useState(patients[0]?._id || '')
 
   const weekStart = useMemo(() => startOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate])
   const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i)), [weekStart])
@@ -80,49 +83,34 @@ export default function DoctorSchedules() {
         .filter((a) => overlaps(a.startTime, a.endTime, slotStart, slotEnd))
   }, [appointments, currentDoctorId])
 
-  const openBookingForSlot = (day, slotStartMin) => {
-    const dateLabel = format(day, 'EEE, MMM d')
-    const slotStart = new Date(day)
-    slotStart.setHours(Math.floor(slotStartMin / 60), slotStartMin % 60, 0, 0)
-    const slotEnd = new Date(slotStart)
-    slotEnd.setMinutes(slotEnd.getMinutes() + 60)
+  const handleSaveAvailability = async () => {
+    const startM = parseTimeToMinutes(shiftStart)
+    const endM = parseTimeToMinutes(shiftEnd)
+    const breakS = parseTimeToMinutes(breakStart)
+    const breakE = parseTimeToMinutes(breakEnd)
 
-    const conflicts = slotAppointments(slotStart, slotEnd)
-    setBookingModal({
-      slotStartISO: slotStart.toISOString(),
-      slotEndISO: slotEnd.toISOString(),
-      dateLabel,
-      conflict: conflicts[0] || null,
-    })
-    setBookingEmergencyOverride(Boolean(conflicts[0]))
-    setBookingType('video')
-    setBookingPriority(conflicts[0]?.priority || 'FOLLOW_UP')
-    setBookingPatientId(patients[0]?._id || '')
-  }
+    const morning = []
+    const afternoon = []
 
-  const saveAppointment = () => {
-    if (!bookingModal) return
-    const conflicts = bookingModal.conflict
-
-    if (conflicts && !bookingEmergencyOverride) {
-      window.alert('This slot is already booked. Enable Emergency override to overbook (demo).')
-      return
+    // Generate 30-minute slots
+    for (let m = startM; m < endM; m += 30) {
+      if (m >= breakS && m < breakE) continue; // Skip break
+      
+      const timeStr = formatToAmPm(m)
+      if (m < 12 * 60) {
+        morning.push(timeStr)
+      } else {
+        afternoon.push(timeStr)
+      }
     }
 
-    const appointment = {
-      patientId: bookingPatientId,
-      doctorId: currentDoctorId,
-      startTime: bookingModal.slotStartISO,
-      endTime: bookingModal.slotEndISO,
-      type: bookingType === 'video' ? 'VIDEO' : 'IN_PERSON',
-      status: 'BOOKED',
-      priority: bookingPriority,
-      roomType: bookingType === 'video' ? 'webrtc-loopback' : 'in_person',
-      notes: bookingEmergencyOverride ? 'Emergency override booking' : 'Scheduled appointment',
+    try {
+      await updateDoctor(currentDoctorId, { slots: { morning, afternoon } })
+      window.alert('Availability slots generated and saved successfully!')
+    } catch(err) {
+      console.error(err)
+      window.alert('Failed to save availability')
     }
-
-    addAppointment(appointment)
-    setBookingModal(null)
   }
 
   const completeAppointment = (id) => {
@@ -201,7 +189,7 @@ export default function DoctorSchedules() {
             <button
               type="button"
               className="co-btn co-btn--primary"
-              onClick={() => window.alert('Availability saved for demo session.')}
+              onClick={handleSaveAvailability}
             >
               Save Availability
             </button>
@@ -304,12 +292,6 @@ export default function DoctorSchedules() {
                       <div
                         key={slot.startMin}
                         className={`co-slot ${isOccupied ? statusClass : 'co-slot--free'}`}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openBookingForSlot(d, slot.startMin)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') openBookingForSlot(d, slot.startMin)
-                        }}
                         aria-disabled={false}
                       >
                         <div className="co-slotTime">{formatTimeFromMinutes(slot.startMin)}</div>
@@ -333,82 +315,7 @@ export default function DoctorSchedules() {
         </section>
       </div>
 
-      {bookingModal ? (
-        <div className="co-modalOverlay" onClick={() => setBookingModal(null)}>
-          <div className="co-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="co-modalHeader">
-              <div className="co-modalTitle">Book appointment</div>
-              <button className="co-btn co-btn--ghost" type="button" onClick={() => setBookingModal(null)}>
-                Close
-              </button>
-            </div>
 
-            <div className="co-mutedSmall">
-              Slot: <b>{bookingModal.dateLabel}</b> • <b>{new Date(bookingModal.slotStartISO).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</b>
-            </div>
-
-            {bookingModal.conflict ? (
-              <div style={{ marginTop: 10 }} className="co-alert co-alert--warning">
-                This slot is occupied by another appointment (demo).
-              </div>
-            ) : null}
-
-            <div style={{ height: 12 }} />
-
-            <div className="co-form">
-              <label className="co-label">
-                Patient
-                <select className="co-input" value={bookingPatientId} onChange={(e) => setBookingPatientId(e.target.value)}>
-                  {patients.map((p) => (
-                    <option key={p._id || p.id} value={p._id || p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="co-formRow">
-                <label className="co-label">
-                  Appointment type
-                  <select className="co-input" value={bookingType} onChange={(e) => setBookingType(e.target.value)}>
-                    <option value="in_person">In-person</option>
-                    <option value="video">Video consultation</option>
-                  </select>
-                </label>
-                <label className="co-label">
-                  Priority
-                  <select className="co-input" value={bookingPriority} onChange={(e) => setBookingPriority(e.target.value)}>
-                    <option value="URGENT">Urgent</option>
-                    <option value="FOLLOW_UP">Follow-up</option>
-                    <option value="ROUTINE">Routine</option>
-                  </select>
-                </label>
-              </div>
-
-              {bookingModal.conflict ? (
-                <label className="co-checkRow" style={{ marginTop: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={bookingEmergencyOverride}
-                    onChange={(e) => setBookingEmergencyOverride(e.target.checked)}
-                  />
-                  Emergency booking override
-                </label>
-              ) : null}
-
-              <div className="co-actions">
-                <button className="co-btn co-btn--primary" type="button" onClick={saveAppointment}>
-                  Confirm Booking
-                </button>
-              </div>
-
-              <div className="co-mutedSmall">
-                If booked as video, join via <b>Telemedicine</b> route (loopback demo).
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <section className="co-card" style={{ marginTop: 16 }}>
         <div className="co-pageHeader">

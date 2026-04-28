@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { useApp } from '../../context/AppContext'
 import { Clock, FileText, Phone, UserPlus, X } from 'lucide-react'
 
@@ -47,33 +48,10 @@ export default function DoctorPatientsPage() {
     }
   }
 
-  // Get all unique patients diagnosed by this doctor
+  // Get all unique patients from appointments (fetched from backend)
   const diagnosedPatients = useMemo(() => {
-    const patientIds = new Set()
-    
-    // Get all records created by this doctor, collect unique patient IDs
-    records.forEach((record) => {
-      const docId = record.doctorId?._id || record.doctorId
-      const patId = record.patientId?._id || record.patientId
-      if (docId === currentDoctorId && patId) {
-        patientIds.add(patId)
-      }
-    })
-
-    // Get patient details for each unique patient ID
-    const patientsList = Array.from(patientIds)
-      .map((patientId) => {
-        const patient = getPatientById(patientId)
-        if (!patient) return null
-
-        // Get latest appointment and records for this patient
-        return patient
-      })
-      .filter(Boolean)
-      .sort((a, b) => a.name.localeCompare(b.name))
-
-    return patientsList
-  }, [records, currentDoctorId, getPatientById])
+    return [...patients].sort((a, b) => a.name.localeCompare(b.name))
+  }, [patients])
 
   // Get patient history (all records for a selected patient)
   const patientHistory = useMemo(() => {
@@ -108,9 +86,9 @@ export default function DoctorPatientsPage() {
       </div>
 
       {/* ─── Add Patient Modal ──────────────────────────── */}
-      {showAddModal && (
+      {showAddModal && createPortal(
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 2000,
+          position: 'fixed', inset: 0, zIndex: 9999,
           background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }} onClick={() => setShowAddModal(false)}>
@@ -193,7 +171,8 @@ export default function DoctorPatientsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="co-grid2">
