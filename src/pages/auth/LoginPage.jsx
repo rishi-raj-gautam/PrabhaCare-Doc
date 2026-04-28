@@ -6,8 +6,8 @@ export default function LoginPage() {
   const nav = useNavigate()
   const { login } = useApp()
 
-  const [email, setEmail] = useState('doctor@healthos.com')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
 
   const onSubmit = async (e) => {
@@ -26,9 +26,7 @@ export default function LoginPage() {
       <div className="co-authCard">
         <div className="co-authBrand">PrabhaCare</div>
         <h1 className="co-authTitle">Sign in</h1>
-        <p className="co-mutedSmall">
-          Demo accounts: <b>doctor@prabhacare.demo</b> / <b>demo123</b> and <b>patient@prabhacare.demo</b> / <b>demo123</b>
-        </p>
+
 
         <form className="co-form" onSubmit={onSubmit}>
           <label className="co-label">
